@@ -9,13 +9,21 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.7.5",
+    "@babel/preset-env": "^7.7.6",
     "grunt": "^1.0.4",
+    "grunt-babel": "^8.0.0",
+    "grunt-connect-proxy": "^0.2.0",
     "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-connect": "^2.1.0",
+    "grunt-contrib-cssmin": "^3.0.0",
+    "grunt-contrib-htmlmin": "^3.1.0",
     "grunt-contrib-imagemin": "^3.1.0",
     "grunt-contrib-jshint": "^2.1.0",
     "grunt-contrib-less": "^2.0.0",
     "grunt-contrib-uglify": "^4.0.1",
-    "grunt-contrib-watch": "^1.1.0"
+    "grunt-contrib-watch": "^1.1.0",
+    "load-grunt-tasks": "^5.1.0"
   },
   "dependencies": {
     "cd-file-contact": "^1.0.2"

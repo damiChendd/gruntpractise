@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>登录页面</title></head><body><div>登录页面测试</div><button onclick="login()">请求登录接口按钮</button></body><script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script><script>function login() {
+    $.ajax({
+      // url:'http://localhost/index',
+      url:'/api/index',
+      method:'get',
+      success:function () {
+        console.log('走成功')
+      },
+      error:function () {
+        console.log('走失败')
+      }
+    })
+  }</script></html>
