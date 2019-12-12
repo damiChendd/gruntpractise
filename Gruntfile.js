@@ -1,11 +1,19 @@
 // 配置grunt
+var lrSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet;
+var mountFolder = function (connect, dir) {
+  return connect.static(require('path').resolve(dir));
+};
+var proxySnippet = require('grunt-connect-proxy/lib/utils').proxyRequest;
+
+// var connect = require('connect');
+var serveStatic = require('serve-static');
+// connect(serveStatic('localhost')).listen(9001);
 
 module.exports = function (grunt) {
+
   grunt.initConfig({
 
     pkg:grunt.file.readJSON('package.json'),
-
-    // require('load-grunt-tasks')(grunt);
 
     // 合并配置
     concat:{
@@ -96,17 +104,71 @@ module.exports = function (grunt) {
 
     // 服务器配置 grunt-connect-proxy
     connect: {
-      sever: {
-        options: {
-          port: 9000,
-          hostname: 'localhost'
+      options: {
+        port: 9000,
+        hostname: 'localhost',
+        base: {
+          path: './',
+          // path: 'localhost:9000/',
+          options: {
+            index: 'gruntIndex.html'
+          }
         },
-        proxies: {
-          context:'/api',
-          host:'localhost',
-          port:80
-        }
+        open: true,
+        livereload: true,
+        keepalive: true
+        // Change this to '0.0.0.0' to access the server from outside
       },
+      proxies: [
+        {
+          context: '/api', // 这是你希望出现在grunt serve服务中的路径，比如这里配置的是http://127.0.0.1:9000/api/
+          host: 'localhost', // 这是你希望转发到的远端服务器
+          port: 80, // 远端服务器端口
+          changeOrigin: true, // 建议配置为true，这样它转发时就会把host带过去，比如www.ngnice.com，如果远端服务器使用了虚拟主机的方式配置，该选项通常是必须的。
+          rewrite: {
+            '^/api/': '/remote_api/'  // 地址映射策略，从context开始算，把前后地址做正则替换，如果远端路径和context相同则不用配置。
+          }
+        }
+      ],
+
+      // livereload: {
+      //   options: {
+      //     middleware: function (connect) {
+      //       return [
+      //         lrSnippet,
+      //         mountFolder(connect, '.tmp'),
+      //         connect().use('/bower_components', connect.static('./bower_components')),
+      //         mountFolder(connect, config.app),
+      //         proxySnippet,
+      //       ];
+      //     }
+      //   }
+      // }
+      livereload: {
+        options: {
+          middleware: function (connect, options) {
+            if (!Array.isArray(options.base)) {
+              options.base = [options.base];
+            }
+
+            // Setup the proxy
+            var middlewares = [require('grunt-connect-proxy/lib/utils').proxyRequest];
+
+            // Serve static files.
+            options.base.forEach(function(base) {
+              // middlewares.push(connect.static(base));
+              middlewares.push(serveStatic(base.path, base.options));
+            });
+
+            // Make directory browse-able.
+            // var directory = options.directory || options.base[options.base.length - 1];
+            // middlewares.push(connect.directory(directory));
+
+            return middlewares;
+          }
+
+        }
+      }
     }
 
 
@@ -157,9 +219,39 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-connect-proxy');
 
+
+  // grunt.registerTask('staticServer', '启动静态服务......', function () {
+  //   grunt.task.run([
+  //     'connect:default',
+  //     'watch'
+  //   ]);
+  // });
+  // grunt.registerTask('proxyServer', '启动代理服务......', function () {
+  //   grunt.task.run([
+  //     'configureProxies',
+  //     'connect:liverload',
+  //     'watch'
+  //   ]);
+  // });
+
+
+  grunt.registerTask('serve', function (target) {
+    if (target === 'dist') {
+      return grunt.task.run(['build', 'connect:dist:keepalive']);
+    }
+
+    grunt.task.run([
+      // 'clean:server',
+      // 'wiredep',
+      // 'concurrent:server',
+      // 'autoprefixer',
+      'configureProxies',     //增加到livereload前边
+      'connect:livereload',
+      // 'watch'
+    ]);
+  });
+
   //注册
-  // grunt.registerTask('default', ['concat','uglify','watch','less','imagemin','htmlmin'])
-  // grunt.registerTask('default', ['concat','uglify','less','htmlmin','cssmin','imagemin'])
   grunt.registerTask('default', ['concat','uglify','less','htmlmin','cssmin','babel'])
-  grunt.registerTask('server', ['configureProxies:server','connect:server'])
+
 }
