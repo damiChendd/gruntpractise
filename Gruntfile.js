@@ -126,7 +126,8 @@ module.exports = function (grunt) {
           port: 80, // 远端服务器端口
           changeOrigin: true, // 建议配置为true，这样它转发时就会把host带过去，比如www.ngnice.com，如果远端服务器使用了虚拟主机的方式配置，该选项通常是必须的。
           rewrite: {
-            '^/api/': '/remote_api/'  // 地址映射策略，从context开始算，把前后地址做正则替换，如果远端路径和context相同则不用配置。
+            // '^/api/': '/remote_api/'  // 地址映射策略，从context开始算，把前后地址做正则替换，如果远端路径和context相同则不用配置。
+            '^/api/': '/'  // 地址映射策略，从context开始算，把前后地址做正则替换，如果远端路径和context相同则不用配置。
           }
         }
       ],
