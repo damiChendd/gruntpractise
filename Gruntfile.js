@@ -1,13 +1,35 @@
 // 配置grunt
-var lrSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet;
-var mountFolder = function (connect, dir) {
-  return connect.static(require('path').resolve(dir));
-};
-var proxySnippet = require('grunt-connect-proxy/lib/utils').proxyRequest;
+// 主意：tast的顺序会影响代码执行的顺序
 
-// var connect = require('connect');
+
+/* *
+* img
+* 1.img,2.img=======>1.img,2.img
+* */
+
+/* *
+* html
+* 1.html,2.html=======>1.html,2.html
+* */
+
+/* *
+* css
+* 1.less,2.css=======>1.css,2.css========>contact.css
+* */
+
+
+/* *
+* js
+* 1.js(es6),2.js=======>1.js,2.js========>contact.js
+* */
+
+
+// 主意：(是否合并，有待商榷)，有些文件只需要压缩，合并反而会造成命名冲突，代码冲突，本项目提供了合并、压缩的功能，但合并的功能有待商榷
+
+//combine（合并task）
+//compress(压缩task)
+
 var serveStatic = require('serve-static');
-// connect(serveStatic('localhost')).listen(9001);
 
 module.exports = function (grunt) {
 
@@ -15,49 +37,86 @@ module.exports = function (grunt) {
 
     pkg:grunt.file.readJSON('package.json'),
 
+
+    // 配置图片压缩(有bug)
+    imagemin: {
+      dynamic:{
+        options: {
+          optimizationLevel: 3
+        },
+        files:[{
+          expand:true,
+          cwd:'src/static/img',
+          src:['**/*.{png,jpg,gif}'],
+          dest:'dist/static/img'
+        }]
+      }
+    },
+
+
+    // 配置less
+    less: {
+      // compile:{
+      //   files:{'dist/theme.css':'src/static/css/them.less'},
+      //   options: {
+      //     compress: false
+      //   },
+      // }
+      transfer:{
+        options:{
+          style: 'expanded'
+        },
+        files:[{
+          expand:true,
+          cwd:'src/static/css',
+          src:['*.less'],
+          dest:'src/static/css',
+          ext:'.css'
+        }]
+      }
+    },
+
     // 合并配置
     concat:{
-      test_grunt:{
+      // test_grunt:{
+      //   files: {
+      //     'dist/build.js':['src/a.js','src/b.js']
+      //   }
+      // },
+      // css:{
+      //   files:{
+      //     'dist/buildCss.css':['src/static/css/common.css','src/static/css/index.css']
+      //   }
+      // }
+      js: {
+        src: ['src/static/js/*.js'],
+        dest:'dist/static/js/build.js'
+      },
+      css: {
+        src: ['src/static/css/*.css'],
+        dest:'dist/static/css/build.css'
+      }
+    },
+
+
+    // js 语法配置 grunt-babel
+    babel: {
+      options: {
+        sourceMap: true,
+        presets: ['@babel/preset-env']
+      },
+      transfer: {
         files: {
-          'dist/build.js':['src/a.js','src/b.js']
+          'dist/static/js/build.js': 'dist/static/js/build.js'
         }
       },
-      css:{
-        files:{
-          'dist/buildCss.css':['src/static/css/common.css','src/static/css/index.css']
-        }
-      }
     },
 
     // 压缩配置
     uglify:{
       test_grunt: {
         files: {
-          'dist/build.mini.js':'dist/build.js'
-        }
-      }
-    },
-
-    // 配置less
-    less: {
-      compile:{
-        files:{'dist/theme.css':'src/static/css/them.less'},
-        options: {
-          compress: false
-        },
-      }
-    },
-
-    // html压缩  grunt-contrib-htmlmin
-    htmlmin:{
-      dist:{
-        files:{
-          'dist/view/index.html':'src/view/index.html',
-          'dist/view/login.html':'src/view/login.html'
-        },
-        options:{
-          removeComments: true,
-          collapseWhitespace: true
+          'dist/static/js/build.min.js':'dist/static/js/build.js'
         }
       }
     },
@@ -66,7 +125,7 @@ module.exports = function (grunt) {
     cssmin: {
       target:{
         files:{
-          'dist/build.css':['dist/buildCss.css','dist/theme.css']
+          'dist/static/css/build.min.css':'dist/static/css/build.css'
         }
       },
       options:{
@@ -75,32 +134,32 @@ module.exports = function (grunt) {
       }
     },
 
-    // 配置图片压缩(有bug)
-    // imagemin: {
-    //   dynamic:{
-    //     files:{
-    //       expand:true,
-    //       cwd:'src/static/img/header_02.png',
-    //       // src:['**/*.{png,jpg,gif}'],
-    //       src:['**/*.png'],
-    //       dest:'dist/img/header_02.png'
-    //     }
-    //   }
-    // },
-
-    // js 语法配置 grunt-babel
-    babel: {
-      options: {
-        sourceMap: true,
-        // presets: ['babel-preset-es2015']
-        presets: ['@babel/preset-env']
-      },
-      dist: {
-        files: {
-          'dist/babel.js': 'src/babel.js'
-        }
+    // html压缩  grunt-contrib-htmlmin
+    htmlmin:{
+      // dist:{
+      //   files:{
+      //     'dist/view/index.html':'src/view/index.html',
+      //     'dist/view/login.html':'src/view/login.html'
+      //   },
+      //   options:{
+      //     removeComments: true,
+      //     collapseWhitespace: true
+      //   }
+      // }
+      compress: {
+        options:{
+          removeComments: true,
+          collapseWhitespace: true
+        },
+        files: [{
+          expand: true,
+          cwd: 'src/view',
+          src: '**/*.html',
+          dest: 'dist/view'
+        }]
       }
     },
+
 
     // 服务器配置 grunt-connect-proxy
     connect: {
@@ -131,20 +190,6 @@ module.exports = function (grunt) {
           }
         }
       ],
-
-      // livereload: {
-      //   options: {
-      //     middleware: function (connect) {
-      //       return [
-      //         lrSnippet,
-      //         mountFolder(connect, '.tmp'),
-      //         connect().use('/bower_components', connect.static('./bower_components')),
-      //         mountFolder(connect, config.app),
-      //         proxySnippet,
-      //       ];
-      //     }
-      //   }
-      // }
       livereload: {
         options: {
           middleware: function (connect, options) {
@@ -253,6 +298,6 @@ module.exports = function (grunt) {
   });
 
   //注册
-  grunt.registerTask('default', ['concat','uglify','less','htmlmin','cssmin','babel'])
+  grunt.registerTask('default', ['imagemin','less','concat','babel','uglify','cssmin','htmlmin'])
 
 }

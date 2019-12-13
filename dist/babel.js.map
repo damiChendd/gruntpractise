@@ -1,1 +1,0 @@
-{"version":3,"sources":["../src/babel.js"],"names":["a","console","log"],"mappings":";;AAAA;AACA,IAAIA,CAAC,GAAC,SAAFA,CAAE,GAAI;AACRC,EAAAA,OAAO,CAACC,GAAR,CAAY,KAAZ;AACD,CAFD","sourcesContent":["// 用于js转码测试\r\nvar a=()=>{\r\n  console.log('111')\r\n}\r\n"],"file":"babel.js"}
